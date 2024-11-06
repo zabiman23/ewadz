@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ns:Structures xmlns:ns="http://www.doe.gov/2010/RaptorStructureSchema">
+    <Structure>
+        <MessageType>Update</MessageType>
+        <Version>1.0.0</Version>
+        <Fields>
+            <IntegerField name="Update Rate"/>
+        </Fields>
+        <Metadata>
+            <Key>gov.takx.StructDesc</Key>
+            <Value>EWADZ Update Message</Value>
+        </Metadata>
+    </Structure>
+</ns:Structures>

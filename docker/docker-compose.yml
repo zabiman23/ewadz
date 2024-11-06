@@ -1,0 +1,20 @@
+version: "3.8"
+name: a2ews
+services:
+  ewadz-app:
+    container_name: ewadz-plugin
+    build:
+      context: .. 
+      dockerfile: docker/Dockerfile
+    #image: ewadz:0.0.1
+    ports:
+    - 12042:12042
+    restart: no
+    volumes:
+    - ..:/home/start
+    - .:/app
+    - ./:/home/start  # Ensure correct volume mount
+    - ./docker:/app/docker  # Mount docker directory correctly
+    platform: linux/amd64
+    command: bash -c "chmod +x app/start.sh && app/start.sh && tail -f /dev/null"
+

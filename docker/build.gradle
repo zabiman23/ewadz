@@ -1,0 +1,115 @@
+plugins {
+    id "java"
+}
+
+group = "a2ews.takx.plugin"
+description = "EWADZ Plugin"
+version '1.0.0'
+
+ext {
+    // The build script needs to know the TAKX installation directory in order to install and clean the plugin jar file.
+    // takxInstallDir = "C:/Program Files/TAKX" // Default installation directory for Windows
+    // takxInstallDir = "/Applications/TAKX" // Default installation directory for Mac
+    takxInstallDir = "/opt/TAKX-RF-3.5.0" // Default installation directory for Linux
+
+    // You can determine your TAKX version by looking at the jars in the load directory of your installation;
+    // if the load directory has jars like bootstrap-3.5.0.jar, your TAKX version should be “3.5.0”.
+    takxVersion = "3.5.0"
+
+    // platform = 'win' // Windows; comment out for Mac/Linux
+    // platform = 'macos' // Uncomment for Mac
+    platform = 'linux' // Uncomment for Linux
+
+    takKernelVersion = '4.16.7'
+    worldwindVersion = '2.1.0_2.7c'
+}
+
+repositories {
+    flatDir {
+        dirs "${takxInstallDir}/load", "${takxInstallDir}/lib", "${takxInstallDir}/plugins",
+                "${takxInstallDir}/modules/gov/tak/kernel/main"
+    }
+
+    mavenCentral()
+}
+
+dependencies {
+    // This library defines the TAKX API
+    implementation "gov.takx:platform:$takxVersion"
+
+    // Dependencies that are provided at runtime by TAKX
+    implementation group: 'jakarta.annotation', name: 'jakarta.annotation-api', version: '3.0.0'
+    implementation group: 'jakarta.enterprise', name: 'jakarta.enterprise.cdi-api', version: '4.1.0'
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: '2.0.13'
+    implementation "gov.tak.kernel:takkernel-shared:$takKernelVersion"
+    implementation group: 'gov.tak.kernel', name: "takkernel-engine", version: takKernelVersion
+    implementation group: 'gov.tak.kernel', name: "takkernel-engine-rt-${platform}64", version: takKernelVersion
+    implementation "gov.nasa:worldwind:$worldwindVersion"
+
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.0'
+}
+
+// Instruct Gradle on which version to use for the Gradle wrapper.  For more info on using the Gradle wrapper, see
+// https://docs.gradle.org/3.3/userguide/gradle_wrapper.html
+wrapper {
+    gradleVersion = "7.3"
+}
+
+// Create an install task to copy the jar to the plugins directory
+tasks.create(name: 'install', group: 'Build', description: 'Copy jar to <takxInstallDir>/plugins') {
+    dependsOn 'build'
+
+    doLast {
+        File takxInstallDirectory = new File("${takxInstallDir}")
+
+        // Avoid creating the plugins directory if it doesn't already exist
+        if (takxInstallDirectory.exists()) {
+            File dest = new File(takxInstallDirectory, "plugins")
+
+            // Process the archive, if the appropriate task exists on the project
+            def archiveTask = tasks.findByName('jar')
+            if (archiveTask) {
+                File archiveFile = archiveTask.archivePath
+
+                logger.info("Copy $archiveFile to $dest")
+
+                copy {
+                    from archiveFile
+                    into dest
+                }
+                 // New code to copy the jar to the root directory of the project
+                copy {
+                    from archiveFile
+                    into project.rootDir
+                }
+                
+                logger.info("Copy $archiveFile to ${project.rootDir}")
+            }
+        } else {
+            println "Specified TAKX installation directory does not exist; skipping the jar install!"
+        }
+    }
+}
+
+// Create an uninstall task to delete jar from the plugin directory
+tasks.create(name: 'uninstall', group: 'Build', description: 'Delete jar from <takxInstallDir>/plugins') {
+    dependsOn 'clean'
+    File takxPluginsDir = new File("${takxInstallDir}/plugins")
+    delete fileTree(takxPluginsDir) {
+        include "${project.name}-${project.version}.jar"
+    }
+}
+
+// Create a special configuration for specifying which dependencies should be included in the plugin jar
+configurations {
+    includeInJar { transitive = true }
+    implementation.extendsFrom includeInJar
+}
+
+// Make sure all jars in the runtime configuration are included in the lib directory
+// in the jar that is assembled.
+jar {
+    into('lib') {
+        from configurations.includeInJar
+    }
+}

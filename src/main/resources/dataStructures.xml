@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ns:Structures xmlns:ns="http://www.doe.gov/2010/RaptorStructureSchema">
+    <Structure>
+        <MessageType>Status</MessageType>
+        <Version>1.0.0</Version>
+        <Fields>
+            <DoubleField name="Battery Level"/>
+        </Fields>
+        <Metadata>
+            <Key>gov.takx.StructDesc</Key>
+            <Value>EWADZ Status Message</Value>
+        </Metadata>
+    </Structure>
+</ns:Structures>
